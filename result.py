@@ -1,6 +1,7 @@
 import streamlit as st
 from firebase_admin import db, initialize_app
 import firebase_admin
+from datetime import datetime
 
 # Firebaseの初期化
 if 'firebase_app' not in st.session_state:
@@ -41,6 +42,9 @@ def show_result_page():
     if 'evaluation_submitted' not in st.session_state:
         st.session_state.evaluation_submitted = False
 
+    # 初期化
+    evaluation_result = {}  # 空の辞書として初期化
+
     # フォームの作成
     with st.form("evaluation_form"):
         # 判定結果の選択
@@ -76,47 +80,58 @@ def show_result_page():
 
                 # 正解判定
                 correct_answer = (identity == st.session_state.talk_mode)
-
+                #日付
+                current_date = datetime.now().strftime("%Y-%m-%d")
+                #時間（秒）
+                time_taken_seconds = round(st.session_state.get("end_time", 0) - st.session_state.get("start_time", 0))
                 # 判定結果データ
                 evaluation_result = {
                     "identity": identity,
                     "confidence": confidence,
                     "reason": reason,
                     "turn_count": st.session_state.get("turn_count", 0),
-                    "time_taken": st.session_state.get("end_time", 0) - st.session_state.get("start_time", 0),
+                    "time_taken": time_taken_seconds,
                     "messages": st.session_state.get("messages", []),  # 会話の全メッセージを含む
                     "topic": st.session_state.get("current_topic", "未設定"),
                     "talk_mode": st.session_state.get("talk_mode", "AI"),  # 実際の相手
-                    "correct": correct_answer  # 正解したかどうか
+                    "correct": correct_answer,  # 正解したかどうか
+                    "timestamp": current_date
                 }
-
-                # Firebaseに保存
+                # Firebaseに保存（名前で分類）
                 try:
-                    ref_results.push(evaluation_result)  # 判定結果をFirebaseに送信
+                    user_name = st.session_state.get("user_name", "匿名")
+                    user_ref = ref_results.child(user_name)  # 名前のノードに保存
+                    user_ref.push(evaluation_result)  # 新しい評価データを追加
                     st.success("評価が保存されました！")
+                    st.session_state.page = 'explanation'
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Firebaseへの保存中にエラーが発生しました: {e}")
 
-    # 送信後の結果表示
-    if st.session_state.evaluation_submitted:
-        st.subheader("提出された評価：")
-        st.write(f"判定結果： {identity}")
-        st.write(f"確信度： {confidence}/10")
-        st.write(f"判断理由：{reason}")
+    if st.button("キャンセル（説明画面に飛びます）"):
+        st.session_state.page = 'explanation'
+        st.rerun()
 
-        # 正解判定の表示
-        correct_text = "正解です！" if evaluation_result["correct"] else "不正解です。"
-        st.write(f"あなたの判定は: **{correct_text}**")
-        st.write(f"実際の相手: {evaluation_result['talk_mode']}")
+    # # 送信後の結果表示
+    # if st.session_state.evaluation_submitted:
+    #     st.subheader("提出された評価：")
+    #     st.write(f"判定結果： {identity}")
+    #     st.write(f"確信度： {confidence}/10")
+    #     st.write(f"判断理由：{reason}")
 
-        # 会話のターン数と時間を表示
-        turn_count = st.session_state.get("turn_count", 0)
-        time_taken = st.session_state.get("end_time", 0) - st.session_state.get("start_time", 0)
-        minutes, seconds = divmod(int(time_taken), 60)
-        st.write(f"会話のターン数： {turn_count}")
-        st.write(f"会話にかかった時間： {minutes}分 {seconds}秒")
+    #     # 正解判定の表示
+    #     correct_text = "正解です！" if evaluation_result["correct"] else "不正解です。"
+    #     st.write(f"あなたの判定は: **{correct_text}**")
+    #     st.write(f"実際の相手: {evaluation_result['talk_mode']}")
 
-        # 会話内容を表示
-        st.subheader("会話内容：")
-        for message in st.session_state.get("messages", []):
-            st.write(f"[{message['role']}] {message['content']}")
+    #     # 会話のターン数と時間を表示
+    #     turn_count = st.session_state.get("turn_count", 0)
+    #     time_taken = st.session_state.get("end_time", 0) - st.session_state.get("start_time", 0)
+    #     minutes, seconds = divmod(int(time_taken), 60)
+    #     st.write(f"会話のターン数： {turn_count}")
+    #     st.write(f"会話にかかった時間： {minutes}分 {seconds}秒")
+
+    #     # 会話内容を表示
+    #     st.subheader("会話内容：")
+    #     for message in st.session_state.get("messages", []):
+    #         st.write(f"[{message['role']}] {message['content']}")

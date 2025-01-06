@@ -53,16 +53,9 @@ if 'firebase_app' not in st.session_state:
     except Exception as e:
         st.error(f"Firebaseの初期化に失敗しました: {str(e)}")
 
+ref_chats = db.reference('chats', app=firebase_admin.get_app('turing_test_app'))
+ref_results = db.reference('results', app=firebase_admin.get_app('turing_test_app'))
 config_ref = db.reference('config', app=firebase_admin.get_app('turing_test_app'))
-
-
-# サイドバーにページ切り替えボタンを追加
-if st.sidebar.button('説明ページへ'):
-    st.session_state.page = 'explanation'
-
-if st.sidebar.button('チャットページへ'):
-    st.session_state.page = 'chat'
-    st.session_state.start_time = time.time()  # Start the timer when moving to chat
 
 # お題のリストを追加
 TOPICS = [
@@ -72,19 +65,66 @@ TOPICS = [
 ]
 
 # ページの表示
-if st.session_state.page == 'explanation':
+if st.session_state.page == 'survey':
+    with st.form("user_info_form"):
+        st.subheader("以下の情報を入力してください")
+        name = st.text_input("名前")
+        gender = st.selectbox("性別", ["未選択", "男性", "女性"])
+        age = st.slider("年齢", min_value=0, max_value=100, value=20)
+        ai_usage = st.radio("AIの利用頻度", ["全く使わない", "月に数回", "ほとんど毎日"])
+
+        submitted = st.form_submit_button("情報を保存してチューリングテストを開始")
+
+        if submitted:
+            if not name or gender == "未選択":
+                st.error("名前と性別を入力してください。")
+            else:
+                # Firebaseにユーザー情報を保存
+                user_data = {
+                    "name": name,
+                    "gender": gender,
+                    "age": age,
+                    "ai_usage": ai_usage,
+                    "created_at": time.time()
+                }
+                try:
+                    user_ref = ref_results.child(name)
+                    user_ref.child("user_info").update(user_data)  # ユーザー情報を上書き
+                    st.success("情報が保存されました！")
+                    st.session_state.user_name = name  # セッションに保存
+                    st.session_state.page = "chat"  # チャットページに移動
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Firebaseへの保存中にエラーが発生しました: {e}")
+            st.session_state.start_time = time.time()
+    if st.button("説明ページへ戻る"):
+        st.session_state.page = 'explanation'
+        st.rerun()
+
+elif st.session_state.page == 'explanation':
+    try:
+        ref_chats.delete()
+        st.session_state.messages = []  # チャットメッセージの初期化
+    except Exception as e:
+        st.error(f"chatsノードの削除中にエラーが発生しました: {e}")
+
     st.title('チューリングテスト - 説明')
     st.write("このアプリは、チューリングテストを行うためのものです。")
-    st.write("チューリングテストは、会話の相手がコンピュータか人間かを区別できるかどうかを判断するテストです。")
+    st.write("チューリングテストは、会話の相手がコンピュータか人間かを判別できるかどうかを判断するテストです。")
     st.write("このアプリでチャットを行いその結果を記録します。")
     st.write("会話はターン制で、連続してメッセージを送ることはせずに、交互にメッセージを送信してください。")
     st.write("会話は5分間続き、その後に結果を入力するページに移動します。")
     st.write("途中で判断できて会話を終了したい場合は、会話終了ボタンをクリックしてアンケートに進んでください。")
     st.write("タイマーはメッセージを送信した際に更新されます。")
-    st.write("チャットページに移動して、会話を始めてください。")
+    st.write("なにか異常があれば、お知らせください。")
+    st.write("チャットページに移動して、会話を始めてください。あなたから会話を始めてください。")
 
-    if st.button("会話終了"):
+    if st.button("アンケートページへ"):
+        st.session_state.page = 'survey'
+        st.rerun()
+    if st.button("チャットページへ"):
         st.session_state.page = 'chat'
+        st.session_state.start_time = time.time()
         st.rerun()
 
 elif st.session_state.page == 'chat':
