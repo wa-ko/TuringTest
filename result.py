@@ -61,9 +61,20 @@ def show_result_page():
             value=5
         )
 
-        # 判断理由のテキストエリア
-        reason = st.text_area(
-            "判断理由を詳しく説明してください：",
+        # 理由の選択肢
+        reason_category = st.multiselect(
+            "判断理由（該当するものを選択してください）：",
+            [
+                "言語スタイル（言葉の使い方や文法）",
+                "社会的・感情的（反応が変、非協力的）",
+                "知識と推論（知識、時事問題）",
+                "状況認識（ユーモア、矛盾）"
+            ]
+        )
+
+        # 自由記述のテキストエリア
+        reason_text = st.text_area(
+            "判断理由を詳しく説明してください（オプション）：",
             height=150
         )
 
@@ -88,7 +99,8 @@ def show_result_page():
                 evaluation_result = {
                     "identity": identity,
                     "confidence": confidence,
-                    "reason": reason,
+                    "reason_category": reason_category,  # 選択された理由
+                    "reason_text": reason_text,  # 自由記述の理由
                     "turn_count": st.session_state.get("turn_count", 0),
                     "time_taken": time_taken_seconds,
                     "messages": st.session_state.get("messages", []),  # 会話の全メッセージを含む
