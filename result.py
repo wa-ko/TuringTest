@@ -65,6 +65,7 @@ def show_result_page():
         reason_category = st.selectbox(
             "判断理由（該当するものを選択してください）：",
             [
+                "未選択",
                 "言語スタイル（言葉の使い方や文法）",
                 "社会的・感情的（反応が変、非協力的）",
                 "知識と推論（知識、時事問題）",
@@ -85,7 +86,7 @@ def show_result_page():
         if submitted:
             if not identity:
                 st.error("判定結果を選択してください。")
-            elif not reason_category:
+            elif reason_category == "未選択":
                 st.error("判断理由を入力してください。")
             else:
                 st.session_state.evaluation_submitted = True
@@ -116,12 +117,10 @@ def show_result_page():
                     user_ref = ref_results.child(user_name)  # 名前のノードに保存
                     user_ref.push(evaluation_result)  # 新しい評価データを追加
                     st.success("評価が保存されました！")
-                    st.session_state.page = 'explanation'
-                    st.rerun()
                 except Exception as e:
                     st.error(f"Firebaseへの保存中にエラーが発生しました: {e}")
 
-    if st.button("キャンセル（説明画面に飛びます）"):
+    if st.button("戻る（説明画面に飛びます）"):
         st.session_state.page = 'explanation'
         st.rerun()
 
