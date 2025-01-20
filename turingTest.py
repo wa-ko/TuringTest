@@ -260,6 +260,7 @@ elif st.session_state.page == 'chat':
 
     if remaining_time == 0:
         st.warning("会話が終了しました。")
+        st.session_state.end_time = time.time()
         st.session_state.page = 'result'
         st.rerun()
 
