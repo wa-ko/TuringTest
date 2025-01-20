@@ -85,7 +85,7 @@ def show_result_page():
         if submitted:
             if not identity:
                 st.error("判定結果を選択してください。")
-            elif not reason:
+            elif not reason_category:
                 st.error("判断理由を入力してください。")
             else:
                 st.session_state.evaluation_submitted = True
