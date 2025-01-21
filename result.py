@@ -114,6 +114,23 @@ def show_result_page():
                 # Firebaseに保存（名前で分類）
                 try:
                     user_name = st.session_state.get("user_name", "匿名")
+
+                    # 「匿名」ユーザーの場合は、最新のユーザー名を取得
+                    if user_name == "匿名":
+                        # Firebaseから最新のユーザー情報を取得
+                        user_name_ref = ref_results.get()
+                        latest_user_name = None
+                        latest_created_at = 0
+
+                        # ユーザー情報を走査して最新の「created_at」を持つユーザーを取得
+                        for user_key, user_data in user_name_ref.items():
+                            if 'user_info' in user_data:
+                                created_at = user_data['user_info'].get('created_at', 0)
+                                if created_at > latest_created_at:
+                                    latest_created_at = created_at
+                                    latest_user_name = user_key
+                        user_name = latest_user_name if latest_user_name else "匿名"
+
                     user_ref = ref_results.child(user_name)  # 名前のノードに保存
                     user_ref.push(evaluation_result)  # 新しい評価データを追加
                     st.success("評価が保存されました！")
