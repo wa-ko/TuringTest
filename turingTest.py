@@ -105,6 +105,7 @@ elif st.session_state.page == 'explanation':
     try:
         ref_chats.delete()
         st.session_state.messages = []  # チャットメッセージの初期化
+        st.session_state.current_topic = random.choice(TOPICS)
     except Exception as e:
         st.error(f"chatsノードの削除中にエラーが発生しました: {e}")
 
@@ -142,10 +143,6 @@ elif st.session_state.page == 'chat':
     except Exception as e:
         st.error(f"Firebaseから`talk_mode`を取得できません: {e}")
     st.title('チューリングテスト')
-
-    # お題の表示（セッションステートで保持）
-    if 'current_topic' not in st.session_state:
-        st.session_state.current_topic = random.choice(TOPICS)
 
     st.subheader(f"お題：{st.session_state.current_topic}")
 
