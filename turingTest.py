@@ -212,7 +212,7 @@ elif st.session_state.page == 'chat':
 
                 # Calculate delay
                 char_count = len(full_response)
-                delay = 0.7 * char_count + random.gammavariate(1.5, 3.5)
+                delay = 0.6 * char_count + random.gammavariate(1.5, 3.5)
                 time.sleep(delay)
 
             except requests.exceptions.RequestException as e:
