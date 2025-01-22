@@ -103,7 +103,6 @@ if st.session_state.page == 'survey':
 
 elif st.session_state.page == 'explanation':
     try:
-        ref_chats.delete()
         st.session_state.messages = []  # チャットメッセージの初期化
         st.session_state.current_topic = random.choice(TOPICS)
     except Exception as e:
@@ -117,7 +116,7 @@ elif st.session_state.page == 'explanation':
 - 会話はターン制で、連続してメッセージを送ることはせずに、交互にメッセージを送信してください。
 - 会話は5分間続き、その後に結果を入力するページに移動します。
 - 話題は相手には知らされていませんので注意してください。話題以外のことを話しても構いません。
-- 途中で判断できて会話を終了したい場合は、会話終了ボタンをクリックしてアンケートに進んでください。
+- 判断できた場合は会話終了ボタンをクリックしてアンケートに進んでください。
 - タイマーはメッセージを送信した際に更新されます。
 - なにか異常があれば、お知らせください。
 - こちらの結果は研究に使用されます。※個人情報は記載されません。
