@@ -92,11 +92,11 @@ if st.session_state.page == 'survey':
                     user_ref.child("user_info").update(user_data)  # ユーザー情報を上書き
                     st.success("情報が保存されました！")
                     st.session_state.user_name = name  # セッションに保存
+                    st.session_state.start_time = time.time()
                     st.session_state.page = "chat"  # チャットページに移動
                     st.rerun()
                 except Exception as e:
                     st.error(f"Firebaseへの保存中にエラーが発生しました: {e}")
-            st.session_state.start_time = time.time()
     if st.button("説明ページへ戻る"):
         st.session_state.page = 'explanation'
         st.rerun()
